@@ -47,7 +47,7 @@ Follow these steps to get your Merchant Payment Insights Dashboard up and runnin
 
 ### 1. Clone the Repository
 
-git clone https://github.com/your-username/airtribe-hackathon.git
+git clone https://github.com/prnvshlk7777/pl_online_hackathon_2025
 cd airtribe-hackathon
 
 
