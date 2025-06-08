@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Merchant Payment Insights Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --color-bg: #ffffff;
+            --color-text-primary: #111827;
+            --color-text-secondary: #6b7280;
+            --color-accent: #2563eb;
+            --color-accent-hover: #1d4ed8;
+            --color-card-bg: #f9fafb;
+            --color-card-shadow: rgba(0, 0, 0, 0.05);
+            --color-green: #16a34a;
+            --color-pink: #f472b6;
+            --color-yellow: #fde68a;
+            --color-orange: #fb923c;
+            --color-purple: #a78bfa;
+            --border-radius: 0.75rem;
+            --font-heading: 'Poppins', sans-serif;
+            --font-body: 'Poppins', sans-serif;
+            --transition-duration: 0.3s;
+        }
+        [data-theme="dark"] {
+            --color-bg: #181a20;
+            --color-text-primary: #f3f4f6;
+            --color-text-secondary: #a1a1aa;
+            --color-accent: #60a5fa;
+            --color-accent-hover: #2563eb;
+            --color-card-bg: #23263a;
+            --color-card-shadow: rgba(0,0,0,0.5);
+            --color-green: #22c55e;
+            --color-pink: #f472b6;
+            --color-yellow: #fde68a;
+            --color-orange: #fb923c;
+            --color-purple: #a78bfa;
+        }
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, var(--color-bg) 60%, var(--color-pink) 100%);
+            color: var(--color-text-primary);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            transition: background 0.5s, color 0.5s;
+        }
+        header {
+            position: sticky;
+            top: 0;
+            background: var(--color-bg);
+            box-shadow: 0 1px 6px var(--color-card-shadow);
+            z-index: 100;
+            transition: background 0.5s;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--color-green);
+            font-family: var(--font-heading);
+            letter-spacing: 0.03em;
+            text-shadow: 1px 1px 0 var(--color-yellow), 2px 2px 0 var(--color-pink);
+        }
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        nav a {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-bottom 0.2s;
+        }
+        nav a:hover {
+            color: var(--color-accent);
+            border-bottom: 2px solid var(--color-accent);
+        }
+        button#themeToggle {
+            background: linear-gradient(90deg, var(--color-accent), var(--color-pink));
+            border: none;
+            padding: 0.4rem 1.1rem;
+            border-radius: var(--border-radius);
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px var(--color-card-shadow);
+            transition: background 0.2s, color 0.2s;
+        }
+        button#themeToggle:hover, button#themeToggle:focus {
+            background: linear-gradient(90deg, var(--color-pink), var(--color-accent));
+            color: #fff;
+        }
+        main {
+            max-width: 1200px;
+            margin: 3rem auto 4rem;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 2.5rem;
+        }
+        .hero {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .hero h1 {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-accent);
+            text-shadow: 2px 2px 0 var(--color-yellow), 4px 4px 0 var(--color-pink);
+        }
+        .hero p {
+            color: var(--color-text-secondary);
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+        .query-form {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            box-shadow: 0 4px 15px var(--color-card-shadow);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: var(--color-card-bg);
+        }
+        .query-input {
+            flex-grow: 1;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border-radius: var(--border-radius) 0 0 var(--border-radius);
+            font-family: var(--font-body);
+            color: var(--color-text-primary);
+            background: transparent;
+        }
+        .query-input::placeholder {
+            color: var(--color-text-secondary);
+        }
+        .query-input:focus {
+            outline: 2px solid var(--color-accent);
+        }
+        .query-submit {
+            background: linear-gradient(90deg, var(--color-accent), var(--color-pink));
+            border: none;
+            color: white;
+            padding: 0 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            transition: background 0.2s;
+        }
+        .query-submit:hover, .query-submit:focus {
+            background: linear-gradient(90deg, var(--color-pink), var(--color-accent));
+        }
+        .insights-container {
+            background: var(--color-card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px var(--color-card-shadow);
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: 400px;
+            overflow-y: auto;
+            border: 2px solid var(--color-purple);
+        }
+        .insight-item {
+            border-bottom: 2px dashed var(--color-pink);
+            padding-bottom: 1rem;
+            background: linear-gradient(90deg, var(--color-yellow) 0%, var(--color-card-bg) 100%);
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 8px var(--color-card-shadow);
+            padding: 1rem; /* Added padding to insight items for better spacing */
+        }
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+        .insight-question {
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        .insight-answer {
+            color: var(--color-text-primary);
+            font-size: 1rem;
+            white-space: pre-wrap;
+            margin-bottom: 1rem;
+        }
+        .chart-container {
+            width: 100%;
+            height: 200px;
+            background: var(--color-yellow); /* Background for chart container, though chart.js will fill it */
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            position: relative; /* Ensure canvas fits within */
+        }
+        .alerts-container {
+            background: var(--color-card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px var(--color-card-shadow);
+            padding: 1.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 2px solid var(--color-orange);
+        }
+        .alert, .recommendation {
+            border-left: 6px solid var(--color-accent);
+            background: var(--color-yellow);
+            padding: 1rem 1rem 1rem 1.25rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            color: var(--color-text-primary);
+            font-size: 0.95rem;
+            line-height: 1.3;
+        }
+        .alert-title, .recommendation-title {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: var(--color-accent);
+        }
+        .download-btns {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            grid-column: 1 / -1; /* Make download buttons span full width */
+            justify-content: center; /* Center the buttons */
+        }
+        .download-btns button {
+            background: linear-gradient(90deg, var(--color-accent), var(--color-pink));
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 8px var(--color-card-shadow);
+        }
+        .download-btns button:hover {
+            background: linear-gradient(90deg, var(--color-pink), var(--color-accent));
+        }
+        #loginModal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.35);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        #loginForm {
+            background: white;
+            padding: 2rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            min-width: 320px;
+        }
+        #loginForm input {
+            padding: 0.7rem;
+            border-radius: 0.5rem;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        #loginForm button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.7rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        #loginError {
+            color: #dc2626;
+            margin: 0;
+            font-size: 0.95rem;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+            .alerts-container {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginModal">
+      <form id="loginForm">
+        <h2 style="margin:0 0 0.5rem 0; color:#2563eb; font-family:'Poppins',sans-serif;">Login</h2>
+        <input type="text" id="loginUser" placeholder="Username" required>
+        <input type="password" id="loginPass" placeholder="Password" required>
+        <button type="submit">Login</button>
+        <p id="loginError">Invalid credentials</p>
+      </form>
+    </div>
+    <header role="banner" style="display:none;">
+        <div class="nav-container">
+            <div class="logo" aria-label="Merchant Insights Logo">Check Your Status</div>
+            <nav role="navigation" aria-label="Main navigation">
+                <a href="#" tabindex="0">Home</a>
+                <a href="#" tabindex="0">Dashboard</a>
+                <a href="#" tabindex="0">Contact</a>
+                <button id="themeToggle" aria-pressed="false" aria-label="Toggle dark and light mode">Dark Mode</button>
+            </nav>
+        </div>
+    </header>
+    <main role="main" class="container" style="display:none;">
+        <div class="download-btns">
+            <button id="downloadPdfBtn" type="button">Download PDF</button>
+        </div>
+        <section class="hero" aria-label="Dashboard introduction and query input">
+            <h1>Your Intelligent Payment Insights</h1>
+            <p>Get proactive, actionable answers about your payments — just ask your question below.</p>
+            <form id="queryForm" class="query-form" aria-label="Ask a payment insight question">
+                <input
+                    id="queryInput"
+                    class="query-input"
+                    type="text"
+                    placeholder="e.g. Why did my refunds spike yesterday?"
+                    aria-required="true"
+                    aria-describedby="queryHelp"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <button class="query-submit" type="submit" aria-label="Submit query">Ask</button>
+            </form>
+        </section>
+        <section class="insights-container" aria-live="polite" aria-label="Query answers and insights">
+            <p style="text-align: center; color: var(--color-text-secondary); margin-top: 50px;">
+                Ask a question above to get started with your insights!
+            </p>
+        </section>
+        <aside class="alerts-container" aria-label="Proactive alerts and recommendations" tabindex="0">
+            <h2 style="font-weight: 700; color: var(--color-accent); margin-top: 0; margin-bottom:1rem;">Alerts & Recommendations</h2>
+            <p style="color: var(--color-text-secondary);">Loading alerts...</p>
+        </aside>
+    </main>
+    <script>
+        // --- LOGIN LOGIC ---
+        // Initial state set in HTML for display:none, no need to set here again.
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            if(user === 'admin' && pass === 'admin') {
+                document.getElementById('loginModal').style.display = 'none';
+                document.body.querySelector('main').style.display = 'grid'; // Changed to 'grid' to match CSS display
+                document.body.querySelector('header').style.display = 'block'; // Changed to 'block' for header
+                fetchAndRenderAlerts(); // Fetch alerts only after successful login
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+
+        // --- THEME LOGIC ---
+        const themeToggle = document.getElementById('themeToggle');
+        const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+        function setTheme(theme) {
+            if(theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = 'Light Mode';
+                themeToggle.setAttribute('aria-pressed', 'true');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeToggle.textContent = 'Dark Mode';
+                themeToggle.setAttribute('aria-pressed', 'false');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Initial set from localStorage or system preference
+        const storedTheme = localStorage.getItem('theme');
+        if(storedTheme) {
+            setTheme(storedTheme);
+        } else if (prefersDarkScheme.matches) {
+            setTheme('dark');
+        } else {
+            setTheme('light');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        // --- Frontend-Backend Integration Logic ---
+        const insightsContainer = document.querySelector('.insights-container');
+        const alertsContainer = document.querySelector('.alerts-container');
+        const BACKEND_API_URL = 'http://127.0.0.1:5000'; 
+
+        // Chart.js helper (dynamic type)
+        function createChart(ctx, labels, data, type = 'line') {
+            return new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Value',
+                        data: data,
+                        fill: true,
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim(),
+                        backgroundColor: type === 'bar'
+                            ? getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim().replace(')', ', 0.5)').replace('rgb', 'rgba')
+                            : getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim().replace(')', ', 0.15)').replace('rgb', 'rgba'),
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--color-text-secondary').trim() },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--color-text-secondary').trim() },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-card-bg').trim(),
+                            titleColor: getComputedStyle(document.documentElement).getPropertyValue('--color-text-primary').trim(),
+                            bodyColor: getComputedStyle(document.documentElement).getPropertyValue('--color-text-secondary').trim(),
+                            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim(),
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                        }
+                    },
+                    animation: {
+                        duration: 600,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // Helper to create an insight DOM element
+        function createInsightElement(insightData) {
+            const item = document.createElement('article');
+            item.classList.add('insight-item');
+
+            const qElem = document.createElement('p');
+            qElem.classList.add('insight-question');
+            qElem.textContent = insightData.question;
+            item.appendChild(qElem);
+
+            const aElem = document.createElement('p');
+            aElem.classList.add('insight-answer');
+            aElem.innerHTML = insightData.answer;
+            item.appendChild(aElem);
+
+            if (insightData.chartData && insightData.chartData.labels && insightData.chartData.data && insightData.chartData.data.length > 0) {
+                const chartWrapper = document.createElement('div');
+                chartWrapper.classList.add('chart-container');
+                const canvas = document.createElement('canvas');
+                const chartId = 'chart-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                canvas.id = chartId;
+                chartWrapper.appendChild(canvas);
+                item.appendChild(chartWrapper);
+
+                // Get chart type from backend, fallback to 'line'
+                const chartType = insightData.chartData.type || 'line';
+
+                setTimeout(() => {
+                    createChart(
+                        document.getElementById(chartId).getContext('2d'),
+                        insightData.chartData.labels,
+                        insightData.chartData.data,
+                        chartType
+                    );
+                }, 50);
+            } else if (insightData.chartData && (!insightData.chartData.labels || insightData.chartData.labels.length === 0)) {
+                const noChartDataMsg = document.createElement('p');
+                noChartDataMsg.style.color = 'var(--color-text-secondary)';
+                noChartDataMsg.style.fontSize = '0.9rem';
+                noChartDataMsg.textContent = "No specific chart data available for this insight.";
+                item.appendChild(noChartDataMsg);
+            }
+
+            return item;
+        }
+
+        // Fetch and render alerts
+        async function fetchAndRenderAlerts() {
+            alertsContainer.innerHTML = '<h2 style="font-weight: 700; color: var(--color-accent); margin-top: 0; margin-bottom:1rem;">Alerts & Recommendations</h2><p style="color: var(--color-text-secondary);">Loading alerts...</p>';
+            try {
+                // FIX: Corrected template literal syntax for fetch URL
+                const response = await fetch(`${BACKEND_API_URL}/alerts`);
+                if (!response.ok) {
+                    // FIX: Corrected template literal syntax for error message
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const alertsData = await response.json();
+                const existingAlerts = [...alertsContainer.querySelectorAll('.alert, .recommendation')];
+                existingAlerts.forEach(el => el.remove());
+
+                // Clear "Loading alerts..." message
+                const loadingMsg = alertsContainer.querySelector('p');
+                if (loadingMsg && loadingMsg.textContent.includes('Loading alerts')) {
+                    loadingMsg.remove();
+                }
+
+                if (alertsData.length === 0) {
+                    alertsContainer.innerHTML += '<p style="color: var(--color-text-secondary);">No new alerts or recommendations at this time. Everything looks good!</p>';
+                    return;
+                }
+
+                alertsData.forEach(({ type, title, description }) => {
+                    const div = document.createElement('section');
+                    div.classList.add(type);
+                    // FIX: Corrected template literal syntax for aria-label
+                    div.setAttribute('role', 'region');
+                    div.setAttribute('aria-label', `${type === 'alert' ? 'Alert' : 'Recommendation'}: ${title}`);
+
+                    const titleElem = document.createElement('p');
+                    titleElem.classList.add(type === 'alert' ? 'alert-title' : 'recommendation-title');
+                    titleElem.textContent = title;
+                    div.appendChild(titleElem);
+
+                    const descElem = document.createElement('p');
+                    descElem.textContent = description;
+                    div.appendChild(descElem);
+
+                    alertsContainer.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error("Error fetching alerts:", error);
+                alertsContainer.innerHTML = '<h2 style="font-weight: 700; color: var(--color-accent); margin-top: 0; margin-bottom:1rem;">Alerts & Recommendations</h2><p style="color: var(--color-text-secondary);">Could not load alerts. Please try again later.</p>';
+            }
+        }
+
+        // Query form submission
+        document.getElementById('queryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) return;
+
+            const input = document.getElementById('queryInput');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            input.disabled = true;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Thinking...';
+
+            // Clear previous "Ask a question..." message if present
+            const placeholderMsg = insightsContainer.querySelector('p');
+            if (placeholderMsg && placeholderMsg.textContent.includes('Ask a question')) {
+                placeholderMsg.remove();
+            }
+
+            try {
+                // FIX: Corrected template literal syntax for fetch URL
+                const response = await fetch(`${BACKEND_API_URL}/ask`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query }),
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    // FIX: Corrected template literal syntax for error message
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorDetails.error || 'Unknown error'}`);
+                }
+
+                const insightData = await response.json();
+                const newInsightElement = createInsightElement(insightData);
+                insightsContainer.prepend(newInsightElement);
+
+            } catch (error) {
+                console.error("Error fetching insight:", error);
+                const errorItem = document.createElement('article');
+                errorItem.classList.add('insight-item');
+                // FIX: Corrected template literal syntax for error message in HTML
+                errorItem.innerHTML = `
+                    <p class="insight-question">Error processing your request</p>
+                    <p class="insight-answer" style="color: var(--color-red);">We encountered an issue: ${error.message}. Please try again or rephrase your question.</p>
+                `;
+                insightsContainer.prepend(errorItem); 
+            } finally {
+                input.disabled = false;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Ask';
+                input.value = '';
+                input.focus();
+            }
+        });
+
+        // --- PDF DOWNLOAD LOGIC ---
+        document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 10;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(18);
+            doc.text('Merchant Payment Insights', 10, y);
+            y += 10;
+
+            // Insights
+            doc.setFontSize(14);
+            doc.text('Insights:', 10, y);
+            y += 8;
+            document.querySelectorAll('.insight-item').forEach((item, idx) => {
+                const q = item.querySelector('.insight-question')?.textContent || '';
+                const a = item.querySelector('.insight-answer')?.textContent || '';
+                doc.setFont('helvetica', 'bold');
+                // FIX: Corrected template literal syntax for text content
+                doc.text(`${idx+1}. ${q}`, 10, y);
+                y += 7;
+                doc.setFont('helvetica', 'normal');
+                doc.text(a, 12, y);
+                y += 10;
+                if (y > 270) { doc.addPage(); y = 10; }
+            });
+
+            // Alerts
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Alerts & Recommendations:', 10, y);
+            y += 8;
+            document.querySelectorAll('.alerts-container section').forEach((item, idx) => {
+                const t = item.querySelector('.alert-title, .recommendation-title')?.textContent || ''; // More robust selector
+                const d = item.querySelector('p:last-of-type')?.textContent || ''; // Select last p for description
+                doc.setFont('helvetica', 'bold');
+                // FIX: Corrected template literal syntax for text content
+                doc.text(`${idx+1}. ${t}`, 10, y);
+                y += 7;
+                doc.setFont('helvetica', 'normal');
+                doc.text(d, 12, y);
+                y += 10;
+                if (y > 270) { doc.addPage(); y = 10; }
+            });
+
+            doc.save('merchant_insights.pdf');
+        });
+    </script>
+</body>
+</html>
