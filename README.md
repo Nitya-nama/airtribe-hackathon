@@ -168,11 +168,17 @@ Check your browser's developer console for JavaScript errors.
 
 
 🔮 Future Enhancements
+
 User Management: Implement a more robust user authentication system.
+
 Custom Date Range Selection: Allow users to specify start and end dates directly in the UI.
+
 More Data Sources: Integrate with live payment gateways or other financial APIs.
+
 Advanced Analytics: Implement more sophisticated predictive models (e.g., churn prediction, lifetime value).
+
 Dashboard Customization: Allow users to drag-and-drop widgets or customize their view.
+
 Sentiment Analysis: Integrate support ticket data with sentiment analysis to identify urgent customer issues.
 
 📄 License
