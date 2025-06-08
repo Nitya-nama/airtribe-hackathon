@@ -120,7 +120,7 @@ Username: admin
 Password: admin
 After successful login, the dashboard will become visible.
 
-💡 Usage Examples
+##💡 Usage Examples
 Once logged in, type your questions into the input field and click "Ask." Here are some example prompts:
 
 General Sales:
@@ -167,7 +167,7 @@ Ensure the Flask backend is returning chartData in the correct JSON format (with
 Check your browser's developer console for JavaScript errors.
 
 
-🔮 Future Enhancements
+##🔮 Future Enhancements
 
 User Management: Implement a more robust user authentication system.
 
@@ -181,6 +181,6 @@ Dashboard Customization: Allow users to drag-and-drop widgets or customize their
 
 Sentiment Analysis: Integrate support ticket data with sentiment analysis to identify urgent customer issues.
 
-📄 License
+##📄 License
 
 This project is open-source and available under the MIT License.
