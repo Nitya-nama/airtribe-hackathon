@@ -176,4 +176,5 @@ Dashboard Customization: Allow users to drag-and-drop widgets or customize their
 Sentiment Analysis: Integrate support ticket data with sentiment analysis to identify urgent customer issues.
 
 📄 License
+
 This project is open-source and available under the MIT License.
