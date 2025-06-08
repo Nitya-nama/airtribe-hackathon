@@ -15,7 +15,7 @@ This project provides a web-based dashboard for merchants to gain quick, convers
 * **PDF Export:** Download a summary of your insights and alerts.
 * **Secure Login:** Basic authentication to access the dashboard.
 
-## 🚀 Technologies Used
+#🚀 Technologies Used
 
 **Backend:**
 * **Python 3:** The core language for the backend logic.
@@ -31,7 +31,7 @@ This project provides a web-based dashboard for merchants to gain quick, convers
 * **jsPDF:** For generating PDF reports of the insights.
 * **Google Fonts (Poppins):** For enhanced typography.
 
-## 📦 Data Files
+#📦 Data Files
 
 This application relies on the following CSV files, which should be placed in the root directory alongside `app.py`:
 
@@ -167,7 +167,7 @@ Ensure the Flask backend is returning chartData in the correct JSON format (with
 Check your browser's developer console for JavaScript errors.
 
 
-##🔮 Future Enhancements
+#🔮 Future Enhancements
 
 User Management: Implement a more robust user authentication system.
 
@@ -181,6 +181,6 @@ Dashboard Customization: Allow users to drag-and-drop widgets or customize their
 
 Sentiment Analysis: Integrate support ticket data with sentiment analysis to identify urgent customer issues.
 
-##📄 License
+#📄 License
 
 This project is open-source and available under the MIT License.
