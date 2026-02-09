@@ -55,8 +55,6 @@ cd airtribe-hackathon
 
 It's recommended to use a Python virtual environment.
 
-
-
 # Create a virtual environment
 
 python -m venv venv
@@ -94,7 +92,7 @@ set OPENAI\_API\_KEY=YOUR\_OPENAI\_API\_KEY\_HERE
 
 export OPENAI\_API\_KEY="YOUR\_OPENAI\_API\_KEY\_HERE"
 
-# IMPORTANT: Replace YOUR\_OPENAI\_API\_KEY\_HERE with your actual key.
+## IMPORTANT: Replace YOUR\_OPENAI\_API\_KEY\_HERE with your actual key.
 
 # This is usually not necessary in the Canvas environment.
 
@@ -102,7 +100,7 @@ export OPENAI\_API\_KEY="YOUR\_OPENAI\_API\_KEY\_HERE"
 With your virtual environment activated, run the Flask application:
 
 
-python app.py
+#python app.py
 
 The backend server will start, typically running on http://127.0.0.1:5000 (or http://localhost:5000). You should see output similar to * Running on http://127.0.0.1:5000 in your terminal.
 
@@ -116,8 +114,8 @@ Open your web browser and navigate to:
 
 You will be presented with a login screen.
 
-Username: admin
-Password: admin
+#Username: admin
+#Password: admin
 After successful login, the dashboard will become visible.
 
 ##💡 Usage Examples
