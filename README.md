@@ -1,6 +1,6 @@
 # Merchant Payment Insights Dashboard
 
-This project provides a web-based dashboard for merchants to gain quick, conversational insights into their payment data using a natural language interface. Leveraging a Flask backend for data processing and integration with the OpenAI API for intelligent responses, it allows users to ask questions about transactions, refunds, and performance, receiving data-backed answers and visualizations.
+This project provides a web-based dashboard for merchants to gain quick, conversational insights into their payment data using a natural language interface. Leveraging a Flask backend for data processing and integration with xAI's Grok API for intelligent responses, it allows users to ask questions about transactions, refunds, and performance, receiving data-backed answers and visualizations.
 
 ## ✨ Features
 
@@ -21,7 +21,7 @@ This project provides a web-based dashboard for merchants to gain quick, convers
 * **Python 3:** The core language for the backend logic.
 * **Flask:** A lightweight web framework for building the API.
 * **Pandas:** For efficient data loading, manipulation, and analysis of CSV files.
-* **OpenAI Python Client:** To interact with the OpenAI GPT model for natural language processing and generating insightful responses.
+* **OpenAI Python Client (pointed at xAI):** Used to interact with xAI's Grok model (Grok exposes an OpenAI-compatible API) for natural language processing and generating insightful responses.
 
 **Frontend:**
 * **HTML5:** Structure of the web application.
@@ -71,30 +71,24 @@ source venv/bin/activate
 
 # Install backend dependencies
 
-pip install Flask pandas openai requests
+pip install -r requirements.txt
 
 3. Place Your Data Files
 Ensure the settlement_data.csv, txn_refunds.csv, and Support Data(Sheet1).csv files are in the airtribe-hackathon directory (the same directory as app.py).
 
-4. OpenAI API Key Configuration
-The application is configured to retrieve the OpenAI API key from the environment. Ensure you have an active OpenAI API Key.
-
-In the Canvas environment where this application is designed to run, the API key is automatically injected when api_key="" is used in the OpenAI client initialization. You should generally leave api_key="" as is within the app.py file.
-
-If you are running this project purely locally outside of a Canvas-like environment and encounter "Authentication Error" or "Missing API Key" errors, you would typically set it as an environment variable before running app.py:
-
+4. Grok (xAI) API Key Configuration
+The application reads your xAI API key from the `XAI_API_KEY` environment variable. Get a key at https://console.x.ai. Without it, the dashboard still works for all built-in metrics (totals, refunds, payment method performance, etc.), but free-text AI answers will return a friendly message asking you to configure the key instead of crashing the server. You can optionally set `GROK_MODEL` (defaults to `grok-4`) to choose a different Grok model.
 
 # On Windows (in Command Prompt):
 
-set OPENAI\_API\_KEY=YOUR\_OPENAI\_API\_KEY\_HERE
+set XAI_API_KEY=YOUR_XAI_API_KEY_HERE
 
 # On macOS/Linux:
 
-export OPENAI\_API\_KEY="YOUR\_OPENAI\_API\_KEY\_HERE"
+export XAI_API_KEY="YOUR_XAI_API_KEY_HERE"
 
-## IMPORTANT: Replace YOUR\_OPENAI\_API\_KEY\_HERE with your actual key.
+## IMPORTANT: Replace YOUR_XAI_API_KEY_HERE with your actual key, then run app.py from the same shell.
 
-# This is usually not necessary in the Canvas environment.
 
 5. Run the Flask Backend
 With your virtual environment activated, run the Flask application:
@@ -151,11 +145,11 @@ System Alerts:
 ⚠️ Troubleshooting
 "Connection error" with AI / "Missing bearer authentication":
 
-This indicates the Flask backend cannot reach api.openai.com.
-Verify Internet Connectivity: Ensure the machine running Flask has internet access (e.g., by visiting https://www.google.com or https://api.openai.com/v1/models in a browser on that machine; if https://api.openai.com/v1/models gives a JSON error, connection is fine, issue is API key).
-Firewall: Temporarily disable local firewalls (Windows Defender, macOS Firewall, ufw on Linux) for testing. If on a corporate network, contact IT to allow outbound HTTPS (port 443) traffic to api.openai.com.
+This indicates the Flask backend cannot reach api.x.ai.
+Verify Internet Connectivity: Ensure the machine running Flask has internet access (e.g., by visiting https://www.google.com or https://api.x.ai/v1/models in a browser on that machine; if it gives a JSON error rather than a connection failure, connectivity is fine and the issue is the API key).
+Firewall: Temporarily disable local firewalls (Windows Defender, macOS Firewall, ufw on Linux) for testing. If on a corporate network, contact IT to allow outbound HTTPS (port 443) traffic to api.x.ai.
 Proxy: If you're behind a corporate proxy, you might need to set HTTP_PROXY and HTTPS_PROXY environment variables before running python app.py (e.g., export HTTPS_PROXY="http://your.proxy.server:port").
-API Key: In the Canvas environment, the API key is injected. Ensure api_key="" in client = OpenAI(api_key="") and that the environment provides a valid key.
+API Key: Make sure XAI_API_KEY is set as an environment variable in the same shell you run `python app.py` from.
 "I currently only have transaction data from YYYY-MM-DD. I cannot provide insights for..."
 
 This is not an error, but an informational message. Your loaded data (from CSVs or mock data) has a specific date range. Query only for dates that fall within or after 2025-01-15 for transaction data, and 2025-01-03 for refund data.
