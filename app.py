@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from openai import OpenAI
 import datetime
@@ -12,17 +12,25 @@ app = Flask(__name__)
 CORS(app)
 
 # --- Configuration ---
-# Set your OpenAI API key here or load from environment variables
-# Set API key to an empty string; the environment will provide it at runtime.
+# This app now uses xAI's Grok API instead of OpenAI. Grok exposes an
+# OpenAI-compatible endpoint, so we keep using the `openai` Python client but
+# point it at xAI's base URL and read the key from XAI_API_KEY.
+# Get a key at https://console.x.ai
+XAI_API_KEY = os.environ.get("XAI_API_KEY", "")
+XAI_BASE_URL = "https://api.x.ai/v1"
+GROK_MODEL = os.environ.get("GROK_MODEL", "grok-4")
+print(f"DEBUG: Initializing Grok (xAI) client with api_key length: {len(XAI_API_KEY)}")
 
-# --- DEBUGGING STEP: Print the API key value before initializing the client ---
-# In the Canvas environment, __api_key__ is automatically injected if api_key is an empty string.
-# This print statement will show what value is actually used.
-# You should see an empty string here, and the Canvas environment will handle the actual key injection.
-print(f"DEBUG: Initializing OpenAI client with api_key length: {len('')}")
-# --- END DEBUGGING STEP ---
-
-client = OpenAI(api_key="") 
+client = None
+if XAI_API_KEY:
+    try:
+        client = OpenAI(api_key=XAI_API_KEY, base_url=XAI_BASE_URL)
+    except Exception as e:
+        print(f"WARNING: Failed to initialize Grok client: {e}")
+        client = None
+else:
+    print("WARNING: XAI_API_KEY environment variable not set. "
+          "AI-powered free-text answers will be disabled until it is configured.")
 
 # --- CSV File Paths ---
 # Ensure these CSV files are in the same directory as this app.py file
@@ -210,7 +218,9 @@ def load_data_from_csv():
         '%d-%m-%Y',             # 15-01-2024
         '%Y/%m/%d %H:%M:%S',    # 2024/01/15 12:30:00
         '%Y/%m/%d',             # 2024/01/15
-        '%d/%m/%Y'              # 15/01/2024
+        '%d/%m/%Y',             # 15/01/2024
+        '%d/%m/%y',             # 15/01/24 (2-digit year, as used in settlement_data.csv)
+        '%m/%d/%y'              # 01/15/24
     ]
 
     def _safe_load_csv(file_path, expected_date_col_in_csv, target_date_col_in_df, column_renames, fallback_generator, encoding='utf-8'):
@@ -252,9 +262,11 @@ def load_data_from_csv():
             # If date column is missing, the data is unusable for time-series analysis from this file
             return fallback_generator()
 
-        # Robust date parsing to datetime64[ns]
-        # Try parsing with infer_datetime_format first
-        parsed_dates = pd.to_datetime(temp_df[target_date_col_in_df], errors='coerce', infer_datetime_format=True)
+        # Robust date parsing to datetime64[ns]. `infer_datetime_format` was removed in
+        # newer pandas versions (it raised a TypeError here and silently crashed CSV
+        # loading, forcing a fallback to mock data). We instead let pandas infer the
+        # format and pass dayfirst=True since the source CSVs use DD/MM/YY dates.
+        parsed_dates = pd.to_datetime(temp_df[target_date_col_in_df], errors='coerce', dayfirst=True)
 
         if parsed_dates.isnull().all() and not temp_df.empty:
             print(f"DEBUG: All dates coerced to NaT initially for {file_path}. Trying explicit formats.")
@@ -1053,7 +1065,7 @@ def analyze_transaction_volume_deviation(period='day'):
     return None
 
 
-# --- AI (OpenAI GPT) Integration ---
+# --- AI (xAI Grok) Integration ---
 def get_ai_response(query, context_data):
     # Determine the date range of the actual loaded data
     txn_min_date = transactions_df['transaction_date'].min().date().isoformat() if not transactions_df.empty and 'transaction_date' in transactions_df.columns and not transactions_df['transaction_date'].isnull().all() else "N/A"
@@ -1112,9 +1124,19 @@ def get_ai_response(query, context_data):
         {"role": "user", "content": f"My query: {query}\n\nRelevant data provided by backend:\n{context_str}"}
     ]
 
+    if client is None:
+        return json.dumps({
+            "question": query,
+            "answer": ("I can't reach the AI service right now because no XAI_API_KEY is configured on the "
+                       "server. Set the XAI_API_KEY environment variable (get one at https://console.x.ai) and "
+                       "restart the backend to enable free-text AI answers. In the meantime, try one of the "
+                       "built-in question types (e.g. totals, refunds, payment method performance)."),
+            "chartData": {}
+        })
+
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=GROK_MODEL,
             messages=messages,
             response_format={"type": "json_object"},
             temperature=0.7
@@ -1122,7 +1144,7 @@ def get_ai_response(query, context_data):
         ai_output = response.choices[0].message.content
         return ai_output
     except Exception as e:
-        print(f"Error calling OpenAI API: {e}")
+        print(f"Error calling Grok (xAI) API: {e}")
         return json.dumps({"question": query, "answer": f"I'm sorry, I couldn't process that request due to an internal error with the AI. Please try again or rephrase. Error: {e}", "chartData": {}})
 
 
@@ -1130,10 +1152,14 @@ def get_ai_response(query, context_data):
 
 @app.route('/')
 def home():
-    return "Merchant Payment Insights Backend is running!"
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
+
+@app.route('/index.html')
+def index_page():
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
 
 @app.route('/ask', methods=['POST'])
-async def ask_insight():
+def ask_insight():
     data = request.get_json()
     query = data.get('query', '').lower()
     print(f"Received query: {query}")
@@ -1191,7 +1217,7 @@ async def ask_insight():
     if "error" in query and "2025" in query:
         return jsonify({
             "question": data.get('query'),
-            "answer": "The 'Connection error' you are seeing is likely due to the backend's inability to reach the external AI service (OpenAI). This is an environment/network issue, not a problem with your data for 2025. Please ensure your backend has internet access.",
+            "answer": "The 'Connection error' you are seeing is likely due to the backend's inability to reach the external AI service (xAI Grok). This is an environment/network issue, not a problem with your data for 2025. Please ensure your backend has internet access.",
             "chartData": {}
         })
 
@@ -1351,7 +1377,7 @@ async def ask_insight():
             insight_answer = ai_response.get("answer", insight_answer)
             chart_data = ai_response.get("chartData", chart_data)
         except json.JSONDecodeError:
-            print(f"Failed to decode AI response JSON from OpenAI: {ai_response_json_str}")
+            print(f"Failed to decode AI response JSON from Grok: {ai_response_json_str}")
             insight_answer = "I received an unreadable response from the AI. Please try again."
 
     return jsonify({
