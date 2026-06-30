@@ -11,11 +11,6 @@ import json
 app = Flask(__name__)
 CORS(app)
 
-# --- Configuration ---
-# This app now uses xAI's Grok API instead of OpenAI. Grok exposes an
-# OpenAI-compatible endpoint, so we keep using the `openai` Python client but
-# point it at xAI's base URL and read the key from XAI_API_KEY.
-# Get a key at https://console.x.ai
 XAI_API_KEY = os.environ.get("XAI_API_KEY", "")
 XAI_BASE_URL = "https://api.x.ai/v1"
 GROK_MODEL = os.environ.get("GROK_MODEL", "grok-4")
